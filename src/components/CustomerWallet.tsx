@@ -13,6 +13,8 @@ import { RewardService } from '../services/rewardService';
 import { supabase } from '../lib/supabase';
 import CustomerOnboarding from './CustomerOnboarding';
 import CustomerRedemptionModal from './CustomerRedemptionModal';
+import { useAuth } from '../contexts/AuthContext';
+
 
 interface Customer {
   id: string;
