@@ -58,7 +58,7 @@ function App() {
           
           <Route 
             path="/wallet/:restaurantSlug?" 
-            element={<CustomerWallet />} 
+            element={<CustomerWallet />}
           />
           
           <Route 

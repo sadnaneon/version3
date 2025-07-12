@@ -278,19 +278,6 @@ const DashboardLayout: React.FC = () => {
         </nav>
 
         {/* Customer Wallet Preview Button */}
-        {isSidebarOpen && (
-          <div className="px-4 mb-4">
-            <button
-              onClick={() => setShowCustomerWallet(true)}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 text-blue-700 hover:from-blue-100 hover:to-indigo-100 transition-all duration-200"
-            >
-              <Wallet className="h-5 w-5" />
-              <span className="font-medium">Preview Customer Wallet</span>
-            </button>
-          </div>
-        )}
-
-        {/* User Profile Section */}
 
         {/* Pro upgrade section */}
         {!isPro && isSidebarOpen && (
@@ -353,7 +340,7 @@ const DashboardLayout: React.FC = () => {
                   className="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors flex items-center gap-2 text-sm font-medium"
                 >
                   <Wallet className="h-4 w-4" />
-                  Preview Wallet
+                  Customer Demo
                 </button>
 
                 <div className="relative">
@@ -481,13 +468,6 @@ const DashboardLayout: React.FC = () => {
             </div>
           </div>
         </header>
-
-        <main className="pt-16 lg:pt-16 min-h-screen">
-          <div className="p-4 lg:p-6" style={{ scrollBehavior: 'auto' }}>
-            <Outlet context={{ onUpgrade: handleUpgrade }} />
-          </div>
-        </main>
-      </div>
     </div>
   );
 };
