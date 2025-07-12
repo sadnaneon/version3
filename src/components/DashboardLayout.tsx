@@ -468,6 +468,12 @@ const DashboardLayout: React.FC = () => {
             </div>
           </div>
         </header>
+
+        {/* Main content area */}
+        <main className="pt-16 lg:pt-16">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 };
