@@ -61,6 +61,7 @@ interface Restaurant {
 const CustomerWallet: React.FC = () => {
   const { restaurantSlug } = useParams();
   const navigate = useNavigate();
+  const { restaurant: authRestaurant } = useAuth();
   
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(null);
@@ -74,10 +75,17 @@ const CustomerWallet: React.FC = () => {
   const [showMenu, setShowMenu] = useState(false);
 
   useEffect(() => {
-    if (restaurantSlug) {
+    // If we have restaurantSlug from URL, fetch by slug
+    if (restaurantSlug && !authRestaurant) {
       fetchRestaurant();
+    } 
+    // If we're in demo mode (no slug but have auth restaurant), use auth restaurant
+    else if (!restaurantSlug && authRestaurant) {
+      setRestaurant(authRestaurant);
+      setShowOnboarding(true);
+      setLoading(false);
     }
-  }, [restaurantSlug]);
+  }, [restaurantSlug, authRestaurant]);
 
   useEffect(() => {
     if (restaurant && customer) {
@@ -88,17 +96,23 @@ const CustomerWallet: React.FC = () => {
   const fetchRestaurant = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('restaurants')
-        .select('*')
-        .eq('slug', restaurantSlug)
-        .single();
+      
+      if (restaurantSlug) {
+        const { data, error } = await supabase
+          .from('restaurants')
+          .select('*')
+          .eq('slug', restaurantSlug)
+          .single();
 
-      if (error) throw error;
-      setRestaurant(data);
+        if (error) throw error;
+        setRestaurant(data);
+      }
       
       // Check if customer is already logged in (localStorage)
-      const savedCustomer = localStorage.getItem(`customer_${data.id}`);
+      const restaurantId = restaurantSlug ? restaurant?.id : authRestaurant?.id;
+      if (!restaurantId) return;
+      
+      const savedCustomer = localStorage.getItem(`customer_${restaurantId}`);
       if (savedCustomer) {
         const customerData = JSON.parse(savedCustomer);
         setCustomer(customerData);
@@ -107,7 +121,7 @@ const CustomerWallet: React.FC = () => {
       }
     } catch (error) {
       console.error('Error fetching restaurant:', error);
-      navigate('/');
+      if (restaurantSlug) navigate('/'); // Only navigate away if this was a real restaurant URL
     } finally {
       setLoading(false);
     }
