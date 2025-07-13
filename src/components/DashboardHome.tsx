@@ -11,9 +11,11 @@ import {
 } from 'recharts';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { useAuth } from '../contexts/AuthContext';
+import LoyaltyROIDashboard from './LoyaltyROIDashboard';
 
 const DashboardHome = () => {
   const [timeRange, setTimeRange] = useState('7d');
+  const [showROIDashboard, setShowROIDashboard] = useState(false);
   const { restaurant } = useAuth();
   const {
     stats,
@@ -31,7 +33,7 @@ const DashboardHome = () => {
 
   const iconMap = {
     'Total Customers': Users,
-    'Points Issued': TrendingUp,
+    'Total Points Issued': TrendingUp,
     'Rewards Claimed': Gift,
     'Revenue Impact': DollarSign
   };
@@ -179,6 +181,16 @@ const DashboardHome = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Dashboard Overview</h1>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowROIDashboard(!showROIDashboard)}
+            className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+              showROIDashboard 
+                ? 'bg-[#1E2A78] text-white' 
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            {showROIDashboard ? 'Overview' : 'ROI Analysis'}
+          </button>
           <select 
             value={timeRange}
             onChange={(e) => setTimeRange(e.target.value)}
@@ -197,6 +209,11 @@ const DashboardHome = () => {
         </div>
       </div>
 
+      {/* Show ROI Dashboard or Regular Dashboard */}
+      {showROIDashboard ? (
+        <LoyaltyROIDashboard timeRange={timeRange} />
+      ) : (
+        <>
       {/* Enhanced Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
         {stats.map((stat, index) => {
@@ -655,6 +672,9 @@ const DashboardHome = () => {
           <h3 className="text-lg font-semibold text-gray-900 mb-2">No Recent Activity</h3>
           <p className="text-gray-500">Customer activity will appear here once you start using the loyalty program.</p>
         </div>
+      )}
+    </div>
+        </>
       )}
     </div>
   );

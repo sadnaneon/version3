@@ -334,11 +334,11 @@ export const useDashboardData = (timeRange: string = '7d') => {
             description: 'No customers yet'
           },
           {
-            name: 'Points Issued',
+            name: 'Total Points Issued',
             value: '0',
             change: '+0%',
             trend: 'up',
-            description: 'vs last month'
+            description: 'All points given to customers'
           },
           {
             name: 'Rewards Claimed',
@@ -405,6 +405,14 @@ export const useDashboardData = (timeRange: string = '7d') => {
         fetchRecentActivity(restaurant.id)
       ]);
 
+      // Calculate total points issued (not just current balance)
+      const { data: allTransactions } = await supabase
+        .from('transactions')
+        .select('points')
+        .eq('restaurant_id', restaurant.id)
+        .gt('points', 0); // Only positive point transactions (issued points)
+      
+      const totalPointsIssued = allTransactions?.reduce((sum, t) => sum + t.points, 0) || 0;
       // Generate real stats from database
       const dashboardStats: DashboardStats[] = [
         {
@@ -415,11 +423,11 @@ export const useDashboardData = (timeRange: string = '7d') => {
           description: 'New this month'
         },
         {
-          name: 'Points Issued',
-          value: (customerStats as any).totalPoints.toLocaleString(),
+          name: 'Total Points Issued',
+          value: totalPointsIssued.toLocaleString(),
           change: '+0%',
           trend: 'up',
-          description: 'vs last month'
+          description: 'All points given to customers'
         },
         {
           name: 'Rewards Claimed',
