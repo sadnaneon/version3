@@ -185,12 +185,28 @@ export class CustomerService {
   static async addPointsTransaction(
     restaurantId: string,
     customerId: string,
-    points: number,
     amountSpent?: number,
     description?: string
   ): Promise<void> {
     if (!restaurantId) {
       throw new Error('Restaurant not found');
+    }
+
+    // Get customer tier for calculation
+    const customer = await this.getCustomer(restaurantId, customerId);
+    if (!customer) {
+      throw new Error('Customer not found');
+    }
+
+    // Calculate points using reward engine
+    const points = await RewardEngineService.calculatePointsForOrder(
+      restaurantId,
+      amountSpent || 0,
+      customer.current_tier
+    );
+
+    if (points <= 0) {
+      return; // No points to award
     }
 
     const { error } = await supabase.rpc('process_point_transaction', {
@@ -199,7 +215,7 @@ export class CustomerService {
       p_type: 'purchase',
       p_points: points,
       p_amount_spent: amountSpent,
-      p_description: description || 'Points earned from purchase'
+      p_description: description || `Points earned from ${amountSpent} AED purchase`
     });
 
     if (error) {

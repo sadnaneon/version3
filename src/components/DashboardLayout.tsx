@@ -50,11 +50,12 @@ const DashboardLayout: React.FC = () => {
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Customers', href: '/dashboard/customers', icon: Users },
     { name: 'Rewards', href: '/dashboard/rewards', icon: Gift },
+    { name: 'Reward Engine', href: '/dashboard/reward-engine', icon: Settings },
     { name: 'QR Codes', href: '/dashboard/qr', icon: QrCode },
     { name: 'Staff', href: '/dashboard/staff', icon: UserCog },
     { name: 'Analytics', href: '/dashboard/analytics', icon: LineChart },
     { name: 'Billing', href: '/dashboard/billing', icon: CreditCard },
-    { name: 'Settings', href: '/dashboard/settings', icon: Settings },
+    { name: 'Settings', href: '/dashboard/settings', icon: User },
   ];
 
   const isActive = (path: string) => location.pathname === path;

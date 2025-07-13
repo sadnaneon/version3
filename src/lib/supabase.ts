@@ -122,7 +122,7 @@ export interface Database {
           points_required: number;
           category: string;
           image_url?: string;
-          min_tier?: 'bronze' | 'silver' | 'gold';
+          min_tier?: 'bronze' | 'silver' | 'gold' | 'platinum';
           is_active?: boolean;
           total_available?: number;
           total_redeemed?: number;
