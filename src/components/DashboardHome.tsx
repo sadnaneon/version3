@@ -673,7 +673,6 @@ const DashboardHome = () => {
           <p className="text-gray-500">Customer activity will appear here once you start using the loyalty program.</p>
         </div>
       )}
-    </div>
         </>
       )}
     </div>
