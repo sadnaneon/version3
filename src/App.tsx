@@ -7,6 +7,7 @@ import DashboardHome from './components/DashboardHome';
 import CustomerWallet from './components/CustomerWallet';
 import RewardsPage from './components/RewardsPage';
 import DebugAuth from './components/DebugAuth';
+import RewardEngine from "./components/RewardEngine";
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
