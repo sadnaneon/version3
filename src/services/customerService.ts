@@ -3,9 +3,6 @@ import { Database } from '../lib/supabase';
 
 type Customer = Database['public']['Tables']['customers']['Row'];
 type CustomerInsert = Database['public']['Tables']['customers']['Insert'];
-type CustomerUpdate = Database['public']['Tables']['customers']['Update'];
-type Transaction = Database['public']['Tables']['transactions']['Row'];
-
 export class CustomerService {
   static async getCustomers(restaurantId: string): Promise<Customer[]> {
     try {
@@ -199,11 +196,9 @@ export class CustomerService {
     }
 
     // Calculate points using reward engine
-    const points = await RewardEngineService.calculatePointsForOrder(
-      restaurantId,
-      amountSpent || 0,
-      customer.current_tier
-    );
+    // Note: Points calculation now handled per menu item
+    // This method is for legacy support only
+    const points = Math.floor((amountSpent || 0) * 0.1); // Fallback: 10 AED = 1 point
 
     if (points <= 0) {
       return; // No points to award

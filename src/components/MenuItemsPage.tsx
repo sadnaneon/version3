@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Plus, Edit3, Trash2, Eye, EyeOff, Search, Filter, 
-  Utensils, Coffee, Salad, Cookie, DollarSign, Calculator,
+  Utensils, Coffee, Salad, Cookie, DollarSign, Calculator, TrendingUp,
   X, Save, AlertCircle, CheckCircle, TrendingUp, Zap,
-  MoreVertical, Copy, Settings, Target, Crown, Award, ChefHat
+  MoreVertical, Copy, Settings, Target, Crown, Award, ChefHat, Percent,
+  PieChart, BarChart3, Info
 } from 'lucide-react';
 import { MenuItemService, MenuItem } from '../services/menuItemService';
 import { useAuth } from '../contexts/AuthContext';
@@ -219,25 +220,33 @@ const MenuItemsPage: React.FC = () => {
   };
 
   const getPreviewPoints = () => {
-    const mockItem: MenuItem = {
-      id: 'preview',
-      restaurant_id: restaurant?.id || '',
-      name: formData.name,
-      description: formData.description,
-      category: formData.category,
-      cost_price: formData.cost_price,
-      selling_price: formData.selling_price,
-      loyalty_mode: formData.loyalty_mode,
-      loyalty_settings: {
-        profit_allocation_percent: formData.profit_allocation_percent,
-        fixed_points: formData.fixed_points
-      },
-      is_active: formData.is_active,
-      created_at: '',
-      updated_at: ''
-    };
+    if (formData.loyalty_mode === 'smart') {
+      const profit = formData.selling_price - formData.cost_price;
+      const rewardValueAED = profit * (formData.profit_allocation_percent / 100);
+      const basePoints = Math.floor(rewardValueAED);
+      const tierMultiplier = tiers.find(t => t.value === previewTier)?.multiplier || 1.0;
+      return Math.floor(basePoints * tierMultiplier);
+    } else if (formData.loyalty_mode === 'manual') {
+      const tierMultiplier = tiers.find(t => t.value === previewTier)?.multiplier || 1.0;
+      return Math.floor(formData.fixed_points * tierMultiplier);
+    }
+    return 0;
+  };
 
-    return MenuItemService.calculatePointsPreview(mockItem, 1, previewTier);
+  const getProfitAnalysis = () => {
+    const profit = formData.selling_price - formData.cost_price;
+    const profitMargin = formData.selling_price > 0 ? (profit / formData.selling_price) * 100 : 0;
+    const rewardValueAED = formData.loyalty_mode === 'smart' 
+      ? profit * (formData.profit_allocation_percent / 100)
+      : formData.fixed_points * 0.1; // Assuming 1 point = 0.1 AED value
+    const rewardPercentOfSale = formData.selling_price > 0 ? (rewardValueAED / formData.selling_price) * 100 : 0;
+    
+    return {
+      profit,
+      profitMargin,
+      rewardValueAED,
+      rewardPercentOfSale
+    };
   };
 
   const filteredItems = menuItems.filter(item => {
@@ -583,7 +592,10 @@ const MenuItemsPage: React.FC = () => {
 
               {/* Loyalty Settings */}
               <div className="space-y-4">
-                <h4 className="font-medium text-gray-900">Loyalty Reward Settings</h4>
+                <h4 className="font-medium text-gray-900 flex items-center gap-2">
+                  <Zap className="h-5 w-5 text-blue-600" />
+                  Loyalty Reward Settings
+                </h4>
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -599,7 +611,7 @@ const MenuItemsPage: React.FC = () => {
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
-                      <TrendingUp className="h-5 w-5 mx-auto mb-1 text-blue-600" />
+                      <BarChart3 className="h-5 w-5 mx-auto mb-1 text-blue-600" />
                       <p className="text-xs font-medium">Smart Auto</p>
                     </button>
                     
@@ -632,59 +644,152 @@ const MenuItemsPage: React.FC = () => {
                 </div>
 
                 {formData.loyalty_mode === 'smart' && (
-                  <div className="p-4 bg-blue-50 rounded-lg">
-                    <h5 className="font-medium text-blue-900 mb-3">Smart Auto Settings</h5>
+                  <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+                    <h5 className="font-medium text-blue-900 mb-3 flex items-center gap-2">
+                      <BarChart3 className="h-4 w-4" />
+                      Smart Auto Settings
+                    </h5>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Profit Allocation (%)
                       </label>
-                      <input
-                        type="number"
-                        value={formData.profit_allocation_percent}
-                        onChange={(e) => setFormData({ ...formData, profit_allocation_percent: parseFloat(e.target.value) || 0 })}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1E2A78] focus:border-transparent"
-                        min="0"
-                        max="100"
-                        step="1"
-                      />
+                      <div className="relative">
+                        <Percent className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <input
+                          type="number"
+                          value={formData.profit_allocation_percent}
+                          onChange={(e) => setFormData({ ...formData, profit_allocation_percent: parseFloat(e.target.value) || 0 })}
+                          className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1E2A78] focus:border-transparent"
+                          min="0"
+                          max="100"
+                          step="1"
+                        />
+                      </div>
                       <p className="text-xs text-gray-500 mt-1">
                         Percentage of profit to allocate as points
                       </p>
                     </div>
+                    
+                    {/* Profit Analysis Display */}
+                    {formData.cost_price > 0 && formData.selling_price > 0 && (
+                      <div className="mt-4 p-3 bg-white rounded-lg border border-blue-200">
+                        <h6 className="text-sm font-medium text-gray-900 mb-3 flex items-center gap-2">
+                          <PieChart className="h-4 w-4 text-blue-600" />
+                          Profit Analysis
+                        </h6>
+                        <div className="grid grid-cols-2 gap-3 text-sm">
+                          <div className="space-y-2">
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">Cost Price:</span>
+                              <span className="font-medium text-gray-900">{formData.cost_price.toFixed(2)} AED</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">Selling Price:</span>
+                              <span className="font-medium text-gray-900">{formData.selling_price.toFixed(2)} AED</span>
+                            </div>
+                            <div className="flex justify-between border-t pt-2">
+                              <span className="text-green-700 font-medium">Profit:</span>
+                              <span className="font-bold text-green-800">{getProfitAnalysis().profit.toFixed(2)} AED</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">Profit Margin:</span>
+                              <span className="font-medium text-gray-900">{getProfitAnalysis().profitMargin.toFixed(1)}%</span>
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between">
+                              <span className="text-blue-700">Allocation %:</span>
+                              <span className="font-medium text-blue-800">{formData.profit_allocation_percent}%</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-blue-700">Value in AED:</span>
+                              <span className="font-bold text-blue-800">{getProfitAnalysis().rewardValueAED.toFixed(2)} AED</span>
+                            </div>
+                            <div className="flex justify-between border-t pt-2">
+                              <span className="text-purple-700 font-medium">Base Points:</span>
+                              <span className="font-bold text-purple-800">{Math.floor(getProfitAnalysis().rewardValueAED)} pts</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">% of Sale:</span>
+                              <span className="font-medium text-gray-900">{getProfitAnalysis().rewardPercentOfSale.toFixed(1)}%</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
                 {formData.loyalty_mode === 'manual' && (
-                  <div className="p-4 bg-green-50 rounded-lg">
-                    <h5 className="font-medium text-green-900 mb-3">Manual Settings</h5>
+                  <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200">
+                    <h5 className="font-medium text-green-900 mb-3 flex items-center gap-2">
+                      <Calculator className="h-4 w-4" />
+                      Manual Settings
+                    </h5>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Fixed Points per Item
                       </label>
-                      <input
-                        type="number"
-                        value={formData.fixed_points}
-                        onChange={(e) => setFormData({ ...formData, fixed_points: parseFloat(e.target.value) || 0 })}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1E2A78] focus:border-transparent"
-                        min="0"
-                        step="1"
-                      />
+                      <div className="relative">
+                        <Zap className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <input
+                          type="number"
+                          value={formData.fixed_points}
+                          onChange={(e) => setFormData({ ...formData, fixed_points: parseFloat(e.target.value) || 0 })}
+                          className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1E2A78] focus:border-transparent"
+                          min="0"
+                          step="1"
+                        />
+                      </div>
                       <p className="text-xs text-gray-500 mt-1">
                         Points awarded per item purchased
                       </p>
                     </div>
+                    
+                    {/* Manual Mode Analysis */}
+                    {formData.fixed_points > 0 && (
+                      <div className="mt-4 p-3 bg-white rounded-lg border border-green-200">
+                        <h6 className="text-sm font-medium text-gray-900 mb-3 flex items-center gap-2">
+                          <Info className="h-4 w-4 text-green-600" />
+                          Reward Analysis
+                        </h6>
+                        <div className="grid grid-cols-2 gap-3 text-sm">
+                          <div className="space-y-2">
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">Fixed Points:</span>
+                              <span className="font-bold text-green-800">{formData.fixed_points} pts</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">Est. Value:</span>
+                              <span className="font-medium text-gray-900">{(formData.fixed_points * 0.1).toFixed(2)} AED</span>
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            {formData.selling_price > 0 && (
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">% of Sale:</span>
+                                <span className="font-medium text-gray-900">{((formData.fixed_points * 0.1) / formData.selling_price * 100).toFixed(1)}%</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
                 {formData.loyalty_mode !== 'none' && (
-                  <div className="p-4 bg-gray-50 rounded-lg">
-                    <h5 className="font-medium text-gray-900 mb-3">Points Preview</h5>
+                  <div className="p-4 bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl border border-gray-200">
+                    <h5 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                      <Target className="h-5 w-5 text-gray-600" />
+                      Points Preview
+                    </h5>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm text-gray-600">Preview Tier:</span>
                       <select
                         value={previewTier}
                         onChange={(e) => setPreviewTier(e.target.value)}
-                        className="px-2 py-1 border border-gray-200 rounded text-sm"
+                        className="px-3 py-1 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1E2A78] focus:border-transparent"
                       >
                         {tiers.map(tier => (
                           <option key={tier.value} value={tier.value}>
@@ -693,10 +798,13 @@ const MenuItemsPage: React.FC = () => {
                         ))}
                       </select>
                     </div>
-                    <div className="bg-white p-3 rounded-lg border">
+                    <div className="bg-gradient-to-r from-[#1E2A78] to-[#3B4B9A] p-4 rounded-xl text-white">
                       <div className="text-center">
-                        <p className="text-2xl font-bold text-[#1E2A78]">{getPreviewPoints()}</p>
-                        <p className="text-sm text-gray-600">points per item</p>
+                        <p className="text-3xl font-bold mb-1">{getPreviewPoints()}</p>
+                        <p className="text-sm opacity-90">points per item</p>
+                        <p className="text-xs opacity-75 mt-1">
+                          {previewTier.charAt(0).toUpperCase() + previewTier.slice(1)} tier • {tiers.find(t => t.value === previewTier)?.multiplier}x multiplier
+                        </p>
                       </div>
                     </div>
                   </div>

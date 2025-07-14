@@ -74,7 +74,6 @@ function App() {
             <Route index element={<DashboardHome />} />
             <Route path="customers" element={<div className="p-8 text-center text-gray-500">Customers page coming soon...</div>} />
             <Route path="rewards" element={<RewardsPage />} />
-            <Route path="reward-engine" element={<RewardEngine />} /> {/* ✅ NEW ROUTE */}
             <Route path="menu-items" element={<MenuItemsPage />} />
             <Route path="qr" element={<div className="p-8 text-center text-gray-500">QR Codes page coming soon...</div>} />
             <Route path="staff" element={<div className="p-8 text-center text-gray-500">Staff page coming soon...</div>} />
