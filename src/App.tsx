@@ -8,6 +8,7 @@ import CustomerWallet from './components/CustomerWallet';
 import RewardsPage from './components/RewardsPage';
 import DebugAuth from './components/DebugAuth';
 import RewardEngine from "./components/RewardEngineSettings"; // ✅ make sure this path is correct
+import MenuItemsPage from './components/MenuItemsPage';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
@@ -74,6 +75,7 @@ function App() {
             <Route path="customers" element={<div className="p-8 text-center text-gray-500">Customers page coming soon...</div>} />
             <Route path="rewards" element={<RewardsPage />} />
             <Route path="reward-engine" element={<RewardEngine />} /> {/* ✅ NEW ROUTE */}
+            <Route path="menu-items" element={<MenuItemsPage />} />
             <Route path="qr" element={<div className="p-8 text-center text-gray-500">QR Codes page coming soon...</div>} />
             <Route path="staff" element={<div className="p-8 text-center text-gray-500">Staff page coming soon...</div>} />
             <Route path="analytics" element={<div className="p-8 text-center text-gray-500">Analytics page coming soon...</div>} />

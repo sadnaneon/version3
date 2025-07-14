@@ -210,6 +210,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       createSampleRewards(restaurant.id).catch(error => {
         console.warn('⚠️ Failed to create sample rewards:', error);
       });
+      
+      // Create sample menu items in background
+      createSampleMenuItems(restaurant.id).catch(error => {
+        console.warn('⚠️ Failed to create sample menu items:', error);
+      });
 
       setRestaurant(restaurant);
       
@@ -248,6 +253,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('✅ Sample rewards created');
     } catch (error) {
       console.warn('⚠️ Failed to create sample rewards:', error);
+    }
+  };
+  
+  const createSampleMenuItems = async (restaurantId: string) => {
+    try {
+      const { MenuItemService } = await import('../services/menuItemService');
+      await MenuItemService.createSampleMenuItems(restaurantId);
+      console.log('✅ Sample menu items created');
+    } catch (error) {
+      console.warn('⚠️ Failed to create sample menu items:', error);
     }
   };
 
