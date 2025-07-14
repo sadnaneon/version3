@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Plus, Edit3, Trash2, Eye, EyeOff, Search, Filter, 
   Utensils, Coffee, Salad, Cookie, DollarSign, Calculator, TrendingUp,
-  X, Save, AlertCircle, CheckCircle, TrendingUp, Zap,
+  X, Save, AlertCircle, CheckCircle, Zap,
   MoreVertical, Copy, Settings, Target, Crown, Award, ChefHat, Percent,
   PieChart, BarChart3, Info
 } from 'lucide-react';
