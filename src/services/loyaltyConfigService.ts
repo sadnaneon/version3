@@ -7,6 +7,7 @@ export interface LoyaltyConfig {
     type: 'smart' | 'manual' | 'spend';
     smartSettings: {
       profitAllocationPercent: number;
+      estimatedProfitMarginPercent: number;
     };
     manualSettings: {
       pointsPerAED: number;
@@ -135,12 +136,14 @@ export class LoyaltyConfigService {
     if (config.blanketMode.enabled) {
       switch (config.blanketMode.type) {
         case 'smart':
-          const estimatedProfit = orderAmount * 0.3; // 30% estimated profit margin
+          const marginPercent = config.blanketMode.smartSettings.estimatedProfitMarginPercent / 100;
+          const estimatedProfit = orderAmount * marginPercent;
           const rewardValueAED = estimatedProfit * (config.blanketMode.smartSettings.profitAllocationPercent / 100);
           basePoints = Math.floor(rewardValueAED / config.pointValueAED);
           breakdown = {
             mode: 'Blanket Smart Auto',
             orderAmount,
+            profitMarginPercent: config.blanketMode.smartSettings.estimatedProfitMarginPercent,
             estimatedProfit,
             allocationPercent: config.blanketMode.smartSettings.profitAllocationPercent,
             rewardValueAED,
@@ -219,7 +222,9 @@ export class LoyaltyConfigService {
         enabled: false,
         type: 'smart',
         smartSettings: {
-          profitAllocationPercent: 20
+          profitAllocationPercent: 20,
+          estimatedProfitMarginPercent: 30
+          estimatedProfitMarginPercent: settings.blanketMode?.smartSettings?.estimatedProfitMarginPercent || 30
         },
         manualSettings: {
           pointsPerAED: 0.1
