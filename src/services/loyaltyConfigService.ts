@@ -36,27 +36,30 @@ export class LoyaltyConfigService {
       if (error) throw error;
 
       const settings = data.settings || {};
-      
+
       return {
-        pointValueAED: settings.pointValueAED || 0.05,
+        pointValueAED: settings.pointValueAED ?? 0.05,
         blanketMode: {
-          enabled: settings.blanketMode?.enabled || false,
-          type: settings.blanketMode?.type || 'smart',
+          enabled: settings.blanketMode?.enabled ?? false,
+          type: settings.blanketMode?.type ?? 'smart',
           smartSettings: {
-            profitAllocationPercent: settings.blanketMode?.smartSettings?.profitAllocationPercent || 20
+            profitAllocationPercent:
+              settings.blanketMode?.smartSettings?.profitAllocationPercent ?? 20,
+            estimatedProfitMarginPercent:
+              settings.blanketMode?.smartSettings?.estimatedProfitMarginPercent ?? 30
           },
           manualSettings: {
-            pointsPerAED: settings.blanketMode?.manualSettings?.pointsPerAED || 0.1
+            pointsPerAED: settings.blanketMode?.manualSettings?.pointsPerAED ?? 0.1
           },
           spendSettings: {
-            pointsPerAED: settings.blanketMode?.spendSettings?.pointsPerAED || 0.2
+            pointsPerAED: settings.blanketMode?.spendSettings?.pointsPerAED ?? 0.2
           }
         },
         tierMultipliers: {
-          bronze: settings.tierMultipliers?.bronze || 1.0,
-          silver: settings.tierMultipliers?.silver || 1.25,
-          gold: settings.tierMultipliers?.gold || 1.5,
-          platinum: settings.tierMultipliers?.platinum || 2.0
+          bronze: settings.tierMultipliers?.bronze ?? 1.0,
+          silver: settings.tierMultipliers?.silver ?? 1.25,
+          gold: settings.tierMultipliers?.gold ?? 1.5,
+          platinum: settings.tierMultipliers?.platinum ?? 2.0
         }
       };
     } catch (error) {
@@ -150,7 +153,7 @@ export class LoyaltyConfigService {
             basePoints
           };
           break;
-          
+
         case 'manual':
           basePoints = Math.floor(orderAmount * config.blanketMode.manualSettings.pointsPerAED);
           breakdown = {
@@ -160,7 +163,7 @@ export class LoyaltyConfigService {
             basePoints
           };
           break;
-          
+
         case 'spend':
           basePoints = Math.floor(orderAmount * config.blanketMode.spendSettings.pointsPerAED);
           breakdown = {
@@ -224,7 +227,6 @@ export class LoyaltyConfigService {
         smartSettings: {
           profitAllocationPercent: 20,
           estimatedProfitMarginPercent: 30
-          estimatedProfitMarginPercent: settings.blanketMode?.smartSettings?.estimatedProfitMarginPercent || 30
         },
         manualSettings: {
           pointsPerAED: 0.1
