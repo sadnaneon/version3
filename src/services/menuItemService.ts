@@ -173,11 +173,21 @@ export class MenuItemService {
   static calculatePointsPreview(
     menuItem: MenuItem,
     quantity: number = 1,
-    customerTier: string = 'bronze'
+    customerTier: string = 'bronze',
+    tierMultipliers: Record<string, number> = { bronze: 1.0, silver: 1.25, gold: 1.5, platinum: 2.0 }
   ): number {
-    // This is now handled by the unified loyalty system
-    // Return 0 for preview - actual calculation happens in LoyaltyConfigService
-    return 0;
+    let basePoints = 0;
+
+    if (menuItem.loyalty_mode === 'smart') {
+      const profit = (menuItem.selling_price - menuItem.cost_price) * quantity;
+      const rewardValue = profit * (menuItem.loyalty_settings.profit_allocation_percent || 0) / 100;
+      basePoints = Math.floor(rewardValue);
+    } else if (menuItem.loyalty_mode === 'manual') {
+      basePoints = (menuItem.loyalty_settings.fixed_points || 0) * quantity;
+    }
+
+    const tierMultiplier = tierMultipliers[customerTier] || 1.0;
+    return Math.floor(basePoints * tierMultiplier);
   }
 
   static async getMenuItemsByCategory(restaurantId: string): Promise<Record<string, MenuItem[]>> {

@@ -8,7 +8,6 @@ import {
 } from 'lucide-react';
 import { MenuItemService, MenuItem } from '../services/menuItemService';
 import { useAuth } from '../contexts/AuthContext';
-import { LoyaltyConfigService } from '../services/loyaltyConfigService';
 
 const MenuItemsPage: React.FC = () => {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -33,7 +32,6 @@ const MenuItemsPage: React.FC = () => {
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState('');
   const [previewTier, setPreviewTier] = useState('bronze');
-  const [loyaltyConfig, setLoyaltyConfig] = useState<any>(null);
 
   const { restaurant } = useAuth();
 
@@ -55,19 +53,9 @@ const MenuItemsPage: React.FC = () => {
   useEffect(() => {
     if (restaurant) {
       fetchMenuItems();
-      fetchLoyaltyConfig();
     }
   }, [restaurant]);
 
-  const fetchLoyaltyConfig = async () => {
-    if (!restaurant) return;
-    try {
-      const config = await LoyaltyConfigService.getLoyaltyConfig(restaurant.id);
-      setLoyaltyConfig(config);
-    } catch (error) {
-      console.error('Error fetching loyalty config:', error);
-    }
-  };
   const fetchMenuItems = async () => {
     if (!restaurant) return;
     
@@ -232,71 +220,34 @@ const MenuItemsPage: React.FC = () => {
   };
 
   const getPreviewPoints = () => {
-    if (!loyaltyConfig) return 0;
-
-    const mockMenuItem = {
-      cost_price: formData.cost_price,
-      selling_price: formData.selling_price,
-      loyalty_mode: formData.loyalty_mode,
-      loyalty_settings: {
-        profit_allocation_percent: formData.profit_allocation_percent,
-        fixed_points: formData.fixed_points
-      }
-    };
-
-    const result = LoyaltyConfigService.calculatePointsPreview(
-      loyaltyConfig,
-      mockMenuItem,
-      formData.selling_price, // order amount
-      previewTier,
-      1
-    );
-
-    return result.points;
-  };
-
-  const getPreviewValueAED = () => {
-    if (!loyaltyConfig) return 0;
-
-    const mockMenuItem = {
-      cost_price: formData.cost_price,
-      selling_price: formData.selling_price,
-      loyalty_mode: formData.loyalty_mode,
-      loyalty_settings: {
-        profit_allocation_percent: formData.profit_allocation_percent,
-        fixed_points: formData.fixed_points
-      }
-    };
-
-    const result = LoyaltyConfigService.calculatePointsPreview(
-      loyaltyConfig,
-      mockMenuItem,
-      formData.selling_price,
-      previewTier,
-      1
-    );
-
-    return result.valueAED;
+    if (formData.loyalty_mode === 'smart') {
+      const profit = formData.selling_price - formData.cost_price;
+      const rewardValueAED = profit * (formData.profit_allocation_percent / 100);
+      const basePoints = Math.floor(rewardValueAED);
+      const tierMultiplier = tiers.find(t => t.value === previewTier)?.multiplier || 1.0;
+      return Math.floor(basePoints * tierMultiplier);
+    } else if (formData.loyalty_mode === 'manual') {
+      const tierMultiplier = tiers.find(t => t.value === previewTier)?.multiplier || 1.0;
+      return Math.floor(formData.fixed_points * tierMultiplier);
+    }
+    return 0;
   };
 
   const getProfitAnalysis = () => {
-    if (!loyaltyConfig) return { profit: 0, profitMargin: 0, rewardValueAED: 0, rewardPercentOfSale: 0 };
-
     const profit = formData.selling_price - formData.cost_price;
     const profitMargin = formData.selling_price > 0 ? (profit / formData.selling_price) * 100 : 0;
-    
-    let rewardValueAED = 0;
-    if (formData.loyalty_mode === 'smart') {
-      rewardValueAED = profit * (formData.profit_allocation_percent / 100);
-    } else if (formData.loyalty_mode === 'manual') {
-      rewardValueAED = formData.fixed_points * loyaltyConfig.pointValueAED;
-    }
-    
+    const rewardValueAED = formData.loyalty_mode === 'smart' 
+      ? profit * (formData.profit_allocation_percent / 100)
+      : formData.fixed_points * 0.1; // Assuming 1 point = 0.1 AED value
     const rewardPercentOfSale = formData.selling_price > 0 ? (rewardValueAED / formData.selling_price) * 100 : 0;
     
-    return { profit, profitMargin, rewardValueAED, rewardPercentOfSale };
+    return {
+      profit,
+      profitMargin,
+      rewardValueAED,
+      rewardPercentOfSale
+    };
   };
-
 
   const filteredItems = menuItems.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -443,19 +394,7 @@ const MenuItemsPage: React.FC = () => {
           {filteredItems.map((item) => {
             const categoryInfo = getCategoryInfo(item.category);
             const CategoryIcon = categoryInfo.icon;
-            
-            // Calculate preview points using loyalty config
-            let previewPoints = 0;
-            if (loyaltyConfig) {
-              const result = LoyaltyConfigService.calculatePointsPreview(
-                loyaltyConfig,
-                item,
-                item.selling_price,
-                'bronze',
-                1
-              );
-              previewPoints = result.points;
-            }
+            const previewPoints = MenuItemService.calculatePointsPreview(item, 1, 'bronze');
 
             return (
               <div
@@ -822,14 +761,14 @@ const MenuItemsPage: React.FC = () => {
                             </div>
                             <div className="flex justify-between">
                               <span className="text-gray-600">Est. Value:</span>
-                              <span className="font-medium text-gray-900">{getPreviewValueAED().toFixed(3)} AED</span>
+                              <span className="font-medium text-gray-900">{(formData.fixed_points * 0.1).toFixed(2)} AED</span>
                             </div>
                           </div>
                           <div className="space-y-2">
                             {formData.selling_price > 0 && (
                               <div className="flex justify-between">
                                 <span className="text-gray-600">% of Sale:</span>
-                                <span className="font-medium text-gray-900">{getProfitAnalysis().rewardPercentOfSale.toFixed(1)}%</span>
+                                <span className="font-medium text-gray-900">{((formData.fixed_points * 0.1) / formData.selling_price * 100).toFixed(1)}%</span>
                               </div>
                             )}
                           </div>
@@ -864,16 +803,8 @@ const MenuItemsPage: React.FC = () => {
                         <p className="text-3xl font-bold mb-1">{getPreviewPoints()}</p>
                         <p className="text-sm opacity-90">points per item</p>
                         <p className="text-xs opacity-75 mt-1">
-                          ≈ {getPreviewValueAED().toFixed(3)} AED value
-                        </p>
-                        <p className="text-xs opacity-75 mt-1">
                           {previewTier.charAt(0).toUpperCase() + previewTier.slice(1)} tier • {tiers.find(t => t.value === previewTier)?.multiplier}x multiplier
                         </p>
-                        {loyaltyConfig && (
-                          <p className="text-xs opacity-75 mt-1">
-                            1 pt = {loyaltyConfig.pointValueAED} AED
-                          </p>
-                        )}
                       </div>
                     </div>
                   </div>
